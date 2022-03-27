@@ -4,9 +4,9 @@ A little project that displays a ranking of french presidential candidates' visi
 
 live demo here: https://pres2022.fr/
 
-![screen_graphs](docs/screen_graphs.png)
 ![screen_ranks](docs/screen_ranks.png)
-![screen_tags.png](docs/screen_tags.png.png)
+![screen_graphs](docs/screen_graphs.png)
+![screen_tags.png](docs/screen_tags.png)
 ![screen_tweets](docs/screen_tweets.png)
 
 
