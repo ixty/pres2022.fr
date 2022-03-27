@@ -1,0 +1,454 @@
+{% extends "page.html" %}
+
+
+{% block content %}
+<script>
+
+</script>
+
+<div class="w-100">
+    <div id="id_progress" style="
+        width: 100%;
+        border-bottom: .15em solid #548BC3;
+        margin: -.01em 0;
+        ">
+    </div>
+</div>
+
+<div class="w-100 d-flex daynav">
+    <span class="mx-auto" class="">
+        <a id="id_dayprev" class="daytext" href="#" onclick="prev_day();">
+            ❮❮
+        </a>
+        <input id="id_date" type="date" min="{{ days[0] }}" max="{{ days[-1] }}" value="{{ days[-1] }}" onchange="start_or_restart_day($('#id_date').val());">
+        <a id="id_daynext" class="daytext" href="#" onclick="next_day();">
+            ❯❯
+        </a>
+        <button id="id_dayanim" class="bwemoji" style="border: none; background-color: #00000000;" onclick="anim_next();">
+            <span id="id_dday"></span>
+            ▶
+        </button>
+    </span>
+</div>
+
+<!-- <div class="container-fluid"> -->
+<div class="w-100" style="text-align: center;">
+    <div id="id_container" class="mx-auto" style="flex-flow: column wrap; justify-content: space-around; ">
+    </div>
+
+
+<script>
+    var hidden_candidates = get_hidden_candidates();
+    var scale = 1.;
+    // var anim_time = 1200;
+    var anim_time = 800;
+    var anim_delay = 500;
+    var data_alldays = {{ nodes|json }};
+    var links_alldays = {{ links|json }};
+    var curday = '{{ daystr }}';
+    var initial_alpha = 0.075;
+    var _initial_alpha = 0.075;
+
+    var _w = window.innerWidth;
+    var _h = window.innerHeight - $('#id_content').position().top - $('#id_content').height();
+    var _min = Math.min(_w, _h);
+    var view_radius = _min * .95 * .6;
+
+    if(_w < 800) scale = .65;
+    if(_w < 400) scale = .45;
+    // scale = Math.max(.5, Math.min(_min / Math.max(_w, _h)))
+
+    var nodes = null;
+    var links = null;
+    var svg = null;
+    var group = null;
+    var node = null;
+    var nodegroup = null;
+    var text = null;
+    var link = null;
+    var svg_links = null;
+
+    var simulation = null;
+
+    var day_min = '{{ days[0] }}';
+    var day_max = '{{ days[-1] }}';
+
+    function ticked() {
+
+        link
+            .attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+
+        var mx = $('#id_svg').width();
+        var my = $('#id_svg').height();
+
+        let clampx = x => x > mx*.5 ? mx*.5 : x < -mx*.5 ? -mx*.5 : x;
+        let clampy = y => y > my*.5 ? my*.5 : y < -my*.5 ? -my*.5 : y;
+
+        node
+            .selectAll("circle")
+            .attr("cx", d => clampx(d.x))
+            .attr("cy", d => clampy(d.y))
+
+        node
+            .selectAll("text")
+            .attr("x", d => clampx(d.x))
+            .attr("y", d => clampy(d.y) + 4);
+    }
+    
+    function drag(simulation)
+    {
+        function dragstarted(event) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+            event.subject.value = event.subject.value / 2;
+        }
+        function dragged(event) {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+        function dragended(event) {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+        }
+        return d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended);
+    }
+
+    function start_or_restart_day(day)
+    {
+        $('#id_dday').html(dday1(day));
+        $('#id_progress').animate({'width': ddayprog(day) + '%'}, anim_time);
+
+        curday = day;
+        if(curday == day_min)
+            $('#id_dayprev').addClass('disabled');
+        else
+            $('#id_dayprev').removeClass('disabled');
+        if(curday == day_max)
+        {
+            $('#id_daynext').addClass('disabled');
+            $('#id_dayanim').addClass('disabled');
+            $('#id_dayanim').prop('disabled', true);
+        }
+        else
+        {
+            $('#id_daynext').removeClass('disabled');
+            $('#id_dayanim').removeClass('disabled');
+            $('#id_dayanim').prop('disabled', false);
+        }
+
+        if(!nodes)
+            nodes = data_alldays[day];
+        else
+        {
+            var old = new Map(node.data().map(d => [d.id, d]));
+            nodes = data_alldays[day].map(d => Object.assign(old.get(d.id) || {}, d));
+        }
+        nodes = nodes.filter(n => hidden_candidates.indexOf(n.name) < 0);
+
+        if(!links)
+            links = links_alldays[day];
+        else
+        {
+            var old = new Map(link.data().map(d => [d.id, d]));
+            links = links_alldays[day].map(d => Object.assign(old.get(d.id) || {}, d));
+        }
+        links = links.filter(n => hidden_candidates.indexOf(n.target.substr && n.target.substr(3) || n.target.name) < 0);
+
+
+        var w = window.innerWidth;
+        var h = window.innerHeight - 1.05* ($('#id_content').position().top + $('#id_content').height());
+
+
+        if(!svg)
+        {
+            svg = d3.create("svg")
+                .attr("id", 'id_svg')
+                .attr("width", w)
+                .attr("height", h)
+                .attr("viewBox", [-w/2, -h/2, w, h])
+            ;
+            document.body.appendChild(svg.node());
+        }
+
+
+        if(!svg_links)
+            svg_links = svg.append("g").attr('name', 'g_links');
+
+        if(!group)
+            group = svg.append("g").attr('name', 'g_nodes')
+    
+
+        node = group.selectAll("g")
+            .data(nodes, d => d.id)
+            .join(
+                function (enter) {
+                    nodegroup = enter
+                        .append("g")
+                        .attr("class", "node");
+
+                    node = nodegroup
+                        .append("circle")
+                        .attr("fill", n => n.type == 'candidate' ? '#' + n.color : '#00000000')
+                        .attr("value", n => n.value)
+                        .attr("r", 0)
+                        .attr("id", n => n.id)
+                        .attr("class", n => n.class)
+                        .on('mouseover', (_, n) => { cand_hover(1, n.name); })
+                        .on('mouseout', (_, n) => { cand_hover(0, n.name); })
+                        .call(drag(simulation));
+
+                    node
+                        .transition()
+                        .duration(anim_time)
+                        .attr("r", d => scale * Math.sqrt(d.value / 3.14159) * (d.type =='candidate' ? 1 : .75))
+
+                    node.append("title")
+                        .text((_, i) => nodes[i].title)
+                        .on('mouseover', (_, n) => { cand_hover(1, n.name); })
+                        .on('mouseout', (_, n) => { cand_hover(0, n.name); })
+                        ;
+
+                    text = nodegroup
+                        .append("text")
+                        .attr("id", n => n.id)
+                        .text(d => d.text)
+                        .style("text-anchor", "middle")
+                        .attr("class", d => d.class)
+                        .attr("candidates", d => d.candidates)
+                        .attr("fill", n => n.type == 'candidate' ? 'black' : 'black')
+                        .attr("font-size", 0)
+                        .attr('font-weight', 'bold')
+                        .on('mouseover', (_, n) => { n.type == 'candidate' ? cand_hover(1, n.name) : tag_hover(1, n.name, n.candidates) })
+                        .on('mouseout', (_, n) => { n.type == 'candidate' ? cand_hover(0, n.name) : tag_hover(0, n.name, n.candidates) })
+                        .call(drag(simulation))
+                        ;
+                    text.append("title")
+                        .text((_, i) => nodes[i].title)
+                        .on('mouseover', (_, n) => { n.type == 'candidate' ? cand_hover(1, n.name) : tag_hover(1, n.name, n.candidates) })
+                        .on('mouseout', (_, n) => { n.type == 'candidate' ? cand_hover(0, n.name) : tag_hover(0, n.name, n.candidates) })
+                        ;
+                    text
+                        .transition()
+                        .duration(anim_time)
+                        .attr("font-size", d => Math.max(d.value == 0 ? 0 : 10, .15 * Math.sqrt(d.value / 3.14159)))
+
+                    return nodegroup;
+                },
+                
+                function (update) {
+
+                    update.select("circle")
+                        .attr("fill", n => n.type == 'candidate' ? '#' + n.color : '#00000000')
+                        .attr("value", n => n.value)
+                        .attr("id", n => n.id)
+                        .attr("class", n => n.class)
+                        .call(drag(simulation));
+                        ;
+                    update.select("circle")
+                        .transition()
+                        .duration(anim_time)
+                        .attr("r", d => scale * Math.sqrt(d.value / 3.14159) * (d.type =='candidate' ? 1 : .75))
+
+
+                    update.select("text")
+                        .attr("id", n => n.id)
+                        .text(d => d.text)
+                        .style("text-anchor", "middle")
+                        .attr("class", d => d.class)
+                        .attr("candidates", d => d.candidates)
+                        .call(drag(simulation));
+
+                    update.select("text")
+                        .transition()
+                        .duration(anim_time)
+                        // .ease(d3.easeLinear)
+                        .attr("font-size", d => Math.max(d.value == 0 ? 0 : 10, .15 * Math.sqrt(d.value / 3.14159)))
+
+                    return update;
+                },
+
+                function (exit) {
+
+                    exit.select("circle")
+                        .transition()
+                        .duration(anim_time)
+                        .attr("r", 0)
+                        // .delay(anim_time)
+                        // .remove()
+
+                    exit.select("text")
+                        .transition()
+                        .duration(anim_time)
+                        .attr("font-size", 0)
+                        // .delay(anim_time)
+                        // .remove()
+
+                    exit
+                        .transition()
+                        .delay(anim_time)
+                        .remove()
+
+                    return exit;
+                },
+            );
+
+
+        link = svg_links
+            .selectAll("line")
+            .data(links, d => d.id)
+            .join(
+                function (enter) {
+
+                    var x = enter
+                        .append("line")
+                        ;
+                    x
+                        .attr("stroke-opacity", d => 0.15 * Math.sqrt(d.value / 3.14159) * initial_alpha * .1)
+                        .attr("stroke-width", d => 0.15 * Math.sqrt(d.value / 3.14159))
+                        .attr("stroke-linecap", 'round')
+                        .attr("stroke", l => l.color)
+                        .attr("id", l => l.id)
+                        .attr("class", l => l.class)
+                    return x;
+                },
+                function (update) {
+                    update
+                        .attr("stroke-opacity", initial_alpha)
+                        .attr("stroke-width", d => 0.15 * Math.sqrt(d.value / 3.14159))
+                        // .attr("stroke-linecap", 'round')
+                        // .attr("stroke", l => l.color)
+                        // .attr("id", l => l.id)
+                        // .attr("class", l => l.class)
+                    return update;
+                },
+                function (exit) {
+                    return exit.remove();
+                },
+            )
+            ;
+
+        // var cand_distance = Math.max(300, w * .5 * .8);
+        var cand_distance = view_radius;
+        var tag_distance = 0;
+        var link_strenght = 0.00002;
+        // http://bl.ocks.org/natebates/273b99ddf86e2e2e58ff
+
+
+
+        if(!simulation)
+        {
+            simulation = d3.forceSimulation(nodes)
+                // .force("charge", d3.forceManyBody().strength(d => d.type == 'candidate' ? scale * -10 * Math.sqrt(d.value / 3.14159) : -1))
+                .force("collide", d3.forceCollide(d =>
+                    d.type == 'candidate' ?
+                        scale * Math.sqrt(d.value / 3.14159) * 1.05 :
+                        scale * Math.sqrt(d.value / 3.14159) * .4)
+                )
+                .force("pos", d3.forceRadial(d => d.type == 'candidate' ? cand_distance : tag_distance).strength(0.2))
+                .force("link", d3.forceLink(links).id(d => d.id).strength(0.01))
+                .force("x", d3.forceX().strength(d => d.type == 'candidate' ? .1 : 0))
+                .force("y", d3.forceY().strength(d => d.type == 'candidate' ? .1 : 0))
+                .alpha(2.0)
+                .alphaDecay(0.2)
+                .on("tick", ticked)
+            ;
+        }
+        else
+        {
+            simulation.nodes(nodes);
+            simulation
+                .force("collide", d3.forceCollide(d =>
+                    d.type == 'candidate' ?
+                        scale * Math.sqrt(d.value / 3.14159) * 1.05 :
+                        scale * Math.sqrt(d.value / 3.14159) * .4)
+                )
+                .force("pos", d3.forceRadial(d => d.type == 'candidate' ? cand_distance : tag_distance).strength(0.2))
+                .force("link", d3.forceLink(links).id(d => d.id).strength(0.01))
+                .force("x", d3.forceX().strength(d => d.type == 'candidate' ? .1 : 0))
+                .force("y", d3.forceY().strength(d => d.type == 'candidate' ? .1 : 0))
+                .alpha(.5)
+                .restart();
+        }
+    }
+
+    function prev_day()
+    {
+        curday = add_days(curday, -1);
+        $('#id_date').val(curday);
+        start_or_restart_day(curday);
+    }
+
+    function next_day()
+    {
+        curday = add_days(curday, +1);
+        $('#id_date').val(curday);
+        start_or_restart_day(curday);
+    }
+
+    function anim_next()
+    {
+        initial_alpha = 0;
+        var nd = add_days(curday, +1);
+        if(nd < day_max)
+        {
+            next_day();
+            setTimeout(anim_next, anim_time + anim_delay);
+        }
+        else
+        {
+            next_day();
+            initial_alpha = _initial_alpha;
+        }
+    }
+
+
+    function cand_hover(on, name)
+    {
+        if(on)
+        {
+            $('.cand_' + name).attr('stroke-opacity', .6);
+            $('.cand_' + name).attr('font-weight', 'bolder');
+        }
+        else
+        {
+            $('.cand_' + name).attr('stroke-opacity', initial_alpha);
+            $('.cand_' + name).attr('font-weight', 'normal');
+        }
+    }
+
+    function tag_hover(on, tag, candidates)
+    {
+        for(var cand of (candidates + '').split(','))
+            if(on)
+            {
+                $('.link_' + tag + '_' + cand).attr('stroke-opacity', .6);
+                $('.link_' + tag + '_' + cand).attr('font-weight', 'bolder');
+                $('.node_' + tag).attr('font-weight', 'bolder');
+                $('.node_tag_' + tag).attr('font-weight', 'bolder');
+            }
+            else
+            {
+                $('.link_' + tag + '_' + cand).attr('stroke-opacity', initial_alpha);
+                $('.link_' + tag + '_' + cand).attr('font-weight', 'normal');
+                $('.node_' + tag).attr('font-weight', 'normal');
+                $('.node_tag_' + tag).attr('font-weight', 'normal');
+            }
+    }
+
+
+    start_or_restart_day('{{ daystr }}');
+
+</script>
+
+
+</div>
+
+{% endblock %}

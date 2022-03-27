@@ -1,0 +1,211 @@
+{% extends "page.html" %}
+
+{% macro candidate_rankrow(candidate) %}
+<div id="id_{{ candidate.name }}" class="row rankline flex-item" style="
+            padding-bottom: .5em;
+            text-align: left;
+    ">
+    <div class="d-flex justify-content-start rankline" style="
+            border-left: 0.5em solid #{{ candidate.color }};
+            /*border-right: 0.5em solid #{{ candidate.color }};*/
+            padding-left: 0.5em;
+            /*padding-right: 0.5em;*/
+            text-align: left;
+            margin: auto;
+        ">
+
+        <div id="id_rank_{{ candidate.name }}" class="rankitem ranktitle" style="width: 7vw;">
+        </div>
+        <div class="rankitem ranktitle" style="width: 38vw;">
+            <img src="{{ candidate.photo }}" style="max-width: 1.5em; max-height: 1.5em; vertical-align: bottom; border-radius: 50%; ">
+            <span class="d-none d-sm-inline">
+                {{ candidate.fullname.split(' ')[0] }}
+            </span>
+            {{ ' '.join(candidate.fullname.split(' ')[1:]) }}
+        </div>
+        <div class="rankitem" style="width: 14vw;">
+            <span class="d-none d-sm-inline">💬</span>
+            <span id="id_tweets_{{ candidate.name }}"></span>
+        </div>
+        <div class="rankitem" style="width: 15vw;">
+            <span class="d-none d-sm-inline">🔄</span>
+            <span id="id_retweets_{{ candidate.name }}"></span>
+        </div>
+        <div class="rankitem" style="width: 10vw;">
+            <span class="d-none d-sm-inline">✉️</span>
+            <span id="id_self_{{ candidate.name }}"></span>
+        </div>
+        <div class="rankitem" style="width: 10vw; text-align: right;">
+            <span id="id_progress_{{ candidate.name }}"></span>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{% block content %}
+<script>
+var data = {
+    {% for day in days %}
+        '{{ day }}': {
+            {% for c in candidates %}
+                '{{ c }}': {
+                    'rank': {{ rankings[day][c] }},
+                    'tweets': {{ cstats[c][day]['tweets'] }},
+                    'interacts': {{ cstats[c][day]['interacts'] }},
+                    'activity': {{ cstats[c][day]['activity'] }},
+                },
+            {% endfor %}
+        },
+    {% endfor %}
+};
+
+var candidates = [
+    {% for c in candidates %}
+        '{{ c }}',
+    {% endfor %}
+];
+
+var day_min = '{{ days[0] }}';
+var day_max = '{{ days[-1] }}';
+
+</script>
+
+<div class="w-100 d-flex daynav">
+    <span class="mx-auto" class="">
+        <a id="id_dayprev" class="daytext" href="#" onclick="prev_day();">
+            ❮❮
+        </a>
+        <input id="id_date" type="date" min="{{ days[0] }}" max="{{ days[-1] }}" value="{{ days[-1] }}" onchange="set_day($('#id_date').val());">
+        <a id="id_daynext" class="daytext disabled" href="#" onclick="next_day();">
+            ❯❯
+        </a>
+        <!--
+        <a id="id_dayanim" class="daytext disabled" href="#" onclick="setTimeout(anim_next, 500);">
+            ⏵ Animation
+        </a>
+        -->
+    </span>
+</div>
+
+<!-- <div class="container-fluid"> -->
+<div class="w-100" style="text-align: center;">
+    <div id="id_container" class="mx-auto d-none" style="flex-flow: column wrap; justify-content: space-around; ">
+
+        <!-- table header -->
+        <div class="row rankline flex-item" style="
+                    padding-bottom: .2em;
+                    margin-bottom: .4em;
+                    order: -1;
+                    border-bottom: .1em solid darkgray;
+            ">
+            <div class="d-flex justify-content-between rankline w-100" style="
+                    /*padding-left: 0.5em;*/
+                    /*padding-right: 0.5em;*/
+                    text-align: left;
+                    /*margin: auto;*/
+                ">
+                <div class="rankitem ranktitle" style="padding-right: .5em;">Rang</div>
+                <div class="rankitem ranktitle" style="padding-right: .5em;">Nom</div>
+                <div class="rankitem ranktitle" style="padding-right: .5em;">Tweets</div>
+                <div class="rankitem ranktitle" style="padding-right: .5em;">Retweets</div>
+                <div class="rankitem ranktitle" style="padding-right: .5em;">Posts</div>
+                <div class="rankitem ranktitle" style="padding-right: .5em;">Progrès</div>
+            </div>
+        </div>
+
+        <!-- line for each candidate -->
+        {% for src in sources %}
+            {{ candidate_rankrow(src) }}
+        {% endfor %}
+    </div>
+    <script>
+        var cur_day = '{{ daystr or days[-1] }}';
+        var first = 1;
+
+        var hidden_candidates = get_hidden_candidates();
+
+        function set_day(day)
+        {
+            cur_day = day;
+            if(cur_day == add_days(cur_day, -1))
+                $('#id_dayprev').addClass('disabled');
+            else
+                $('#id_dayprev').removeClass('disabled');
+            if(cur_day == add_days(cur_day, +1))
+            {
+                $('#id_daynext').addClass('disabled');
+                $('#id_dayanim').addClass('disabled');
+            }
+            else
+            {
+                $('#id_daynext').removeClass('disabled');
+                $('#id_dayanim').removeClass('disabled');
+            }
+
+
+            $('#id_date').val(day);
+            for(var i in candidates)
+            {
+                var c = candidates[i];
+
+                if(!data[day][c]['tweets'] || hidden_candidates.indexOf(c) >= 0)
+                {
+                    $('#id_' + c).hide();
+                }
+                else
+                {
+                    $('#id_' + c).show();
+                    $('#id_' + c).css('order', data[day][c]['rank']);
+                    $('#id_rank_' + c).text(data[day][c]['rank']);
+                    $('#id_tweets_' + c).text(fmt_num(data[day][c]['tweets']));
+                    $('#id_retweets_' + c).text(fmt_num(data[day][c]['interacts']));
+                    $('#id_self_' + c).text(fmt_num(data[day][c]['activity']));
+                    var prog = data[add_days(day, -1)][c]['rank'] - data[day][c]['rank'];
+                    $('#id_progress_' + c).text(prog < 0 ? prog : prog > 0 ? '+' + prog : '=');
+                }
+            }
+            first = 0;
+        };
+
+        function prev_day()
+        {
+            set_day(add_days(cur_day, -1));
+        }
+
+        function next_day()
+        {
+            set_day(add_days(cur_day, +1));
+        }
+
+        set_day('{{ days[-1] }}');
+        $('#id_container').removeClass('d-none');
+        $('#id_container').addClass('d-flex');
+
+        function anim_next()
+        {
+            var nd = add_days(cur_day, +1);
+            if(nd < day_max)
+            {
+                next_day();
+                setTimeout(anim_next, 500);
+            }
+            else
+            {
+                next_day();
+            }
+        }
+        // setTimeout(anim_next, 500);
+
+        document.getElementById('id_content').addEventListener('swiped-right', function(e) {
+            prev_day();
+        });
+
+        document.getElementById('id_content').addEventListener('swiped-left', function(e) {
+            next_day();
+        });
+
+    </script>
+</div>
+
+{% endblock %}

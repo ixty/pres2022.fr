@@ -1,0 +1,214 @@
+{% extends "page.html" %}
+
+{% from "tweet.html" import tweet %}
+
+
+{% macro tweet_list(candidate, category, daystr) %}
+
+    <div id="id_tweets_{{ category }}_{{ candidate.name }}" class="col col-md-8 d-block mx-auto" style="
+            border-left: 0.5em solid #{{ candidate.color }};
+            padding-left: 0.5em;
+            padding-right: 0em;
+            margin-bottom: 0.5em;
+    ">
+        {% set tweets = candidate.get('top_%s' % category) %}
+
+        <div class="d-flex" style="justify-content: space-between; padding-top: .3em;">
+            <span class="" style="
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            ">
+                <img src="{{ candidate.photo }}" style="max-width: 2em; max-height: 2em; vertical-align: top; border-radius: 50%; ">
+                <span class="tw_name">
+                    <span class="d-none d-sm-inline">
+                        {{ candidate.fullname.split(' ')[0] }}
+                    </span>
+                    {{ ' '.join(candidate.fullname.split(' ')[1:]) }}
+                </span>
+            </span>
+
+            <ul class="nav pagination pagination-sm" style="" role="tablist">
+                {% for tw in tweets %}
+                    <li class="page-item" role="presentation">
+                        <a
+                            class="page-link {% if loop.index==1 %}active{% endif %}"
+                            id="btn_tweet_{{ category }}_{{ candidate.name }}_{{ loop.index }}"
+                            data-toggle="tab"
+                            href="#tweet_{{ category }}_{{ candidate.name }}_{{ loop.index }}"
+                            role="tab"
+                            aria-selected="{% if loop.index==1 %}true{% else %}false{% endif %}"
+                            style="
+                                padding: 0.25rem 0.3rem;
+                                color: black;
+                            "
+                        >
+                            {{ loop.index }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+
+        <div class="tab-content">
+            {% if tweets %}
+                {% for tw in tweets %}
+                    <div
+                        id="tweet_{{ category }}_{{ candidate.name }}_{{ loop.index }}"
+                        class="tab-pane fade {% if loop.index==1 %}show active{% endif %}"
+                        role="tabpanel"
+                    >
+                        {{ tweet(candidate.name, tw, daystr, category) }}
+                    </div>
+                    <script>
+                        {% if not loop.first %}
+                            $('#tweet_{{ category }}_{{ candidate.name }}_{{ loop.index }}').on('swiped-right', function(e) {
+                                $('#btn_tweet_{{ category }}_{{ candidate.name }}_{{ loop.index-1 }}').tab('show');
+                                console.log('go to {{ loop.index - 1 }}');
+                            });
+                        {% endif %}
+
+                        {% if not loop.last %}
+                            $('#tweet_{{ category }}_{{ candidate.name }}_{{ loop.index }}').on('swiped-left', function(e) {
+                                $('#btn_tweet_{{ category }}_{{ candidate.name }}_{{ loop.index+1 }}').tab('show');
+                                console.log('go to {{ loop.index + 1 }}');
+                            });
+                        {% endif %}
+                    </script>
+                {% endfor %}
+            {% else %}
+                <hr style="margin-bottom: 0;">
+                <i class="text-muted">- Aucun tweet de la part du candidat ce jour.</i>
+            {% endif %}
+
+            <!-- for tweets json display -->
+            <div id="id_flash_{{ category }}_{{ candidate.name }}" style="display: none;"></div>
+        </div>
+
+    </div>
+{% endmacro %}
+
+
+
+{% block content %}
+<div id="id_daynav" class="w-100 d-flex daynav">
+    <span class="mx-auto" class="">
+        {% if dayprev %}
+            <a class="daytext" href="/tweets/{{ dayprev }}.html">
+                ❮❮
+            </a>
+        {% else %}
+            <a class="daytext disabled" href="#" disabled>
+                ❮❮
+            </a>
+        {% endif %}
+        <input id="id_date" type="date" min="{{ days[0] }}" max="{{ days[-1] }}" value="{{ daystr }}" onchange="location.href='/tweets/' + $('#id_date').val() + '.html';">
+        {% if daynext %}
+            <a class="daytext" href="/tweets/{{ daynext }}.html">
+                ❯❯
+            </a>
+        {% else %}
+            <a class="daytext disabled" href="#" disabled>
+                ❯❯
+            </a>
+        {% endif %}
+    </span>
+</div>
+<script>
+    document.getElementById('id_daynav').addEventListener('swiped-right', function(e) {
+        location.href = '/tweets/{{ dayprev }}.html';
+    });
+    document.getElementById('id_daynav').addEventListener('swiped-left', function(e) {
+        location.href = '/tweets/{{ daynext }}.html';
+    });
+</script>
+
+
+<div class="container-fluid">
+    <div id="id_flash" class="row w-100">
+    </div>
+
+    <div class="" style="margin-bottom: .5em;">
+        <ul class="nav nav-pills d-flex col col-md-8 mx-auto" id="" role="tablist" style="justify-content: space-around;">
+            <li class="nav-item">
+                <a class="nav-link active" id="home-tab" data-toggle="tab" href="#id_self" role="tab">
+                    Top Candidat
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="profile-tab" data-toggle="tab" href="#id_likes" role="tab">
+                    Top Likes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="contact-tab" data-toggle="tab" href="#id_retweets" role="tab">
+                    Top Retweets
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="followers-tab" data-toggle="tab" href="#id_followers" role="tab">
+                    Top Followers
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="id_self" role="tabpanel">
+
+            {% for candidate in candidates if candidate.tweets %}
+                <div id="id_{{ candidate.name }}" class="row tw_row cand_{{ candidate.name }}" style="display: none;">
+                    {{ tweet_list(candidate, 'self', daystr) }}
+                </div>
+            {% endfor %}
+
+        </div>
+        <div class="tab-pane fade" id="id_likes" role="tabpanel">
+            {% for candidate in candidates if candidate.tweets %}
+                <div id="id_{{ candidate.name }}" class="row tw_row cand_{{ candidate.name }}" style="display: none;">
+                    <div class="col" style="">
+                        {{ tweet_list(candidate, 'likes', daystr) }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="tab-pane fade" id="id_retweets" role="tabpanel">
+            {% for candidate in candidates if candidate.tweets %}
+                <div id="id_{{ candidate.name }}" class="row tw_row cand_{{ candidate.name }}" style="display: none;">
+                    <div class="col" style="">
+                        {{ tweet_list(candidate, 'retweets', daystr) }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="tab-pane fade" id="id_followers" role="tabpanel">
+            {% for candidate in candidates if candidate.tweets %}
+                <div id="id_{{ candidate.name }}" class="row tw_row cand_{{ candidate.name }}" style="display: none;">
+                    <div class="col" style="">
+                        {{ tweet_list(candidate, 'followers', daystr) }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        var candidates = [
+            {% for c in candidates %}
+                '{{ c.name }}',
+            {% endfor %}
+        ];
+
+        var hidden_candidates = get_hidden_candidates();
+
+        for(var i in candidates)
+            if(hidden_candidates.indexOf(candidates[i]) >= 0)
+                $('.cand_' + candidates[i]).hide();
+            else
+                $('.cand_' + candidates[i]).show();
+
+    </script>
+
+</div>
+
+{% endblock %}

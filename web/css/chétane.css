@@ -1,0 +1,231 @@
+:root {
+    --col-bg: #E3E3E3;
+    --col-text: #000000;
+    --col-disabled: #8d8d8d;
+    --col-highlight: #9a9999;
+}
+
+@font-face {
+  font-family: 'Noto Color Emoji';
+  src: url(/css/NotoColorEmoji.ttf);
+}
+
+body {
+    background-color: var(--col-bg);
+}
+svg {
+    font-family: sans-serif, 'Noto Color Emoji';
+}
+
+.bwemoji {
+    filter: grayscale(100%);
+}
+
+.nav {
+    padding: 0;
+}
+.daynav {
+    background-color: var(--col-bg);
+    padding-bottom: .5em;
+    padding-top: 0.5em;
+    font-size: 1.3em;
+}
+.daytext {
+    color: var(--col-text) !important;
+    font-weight: bold;
+    padding: 1em .5em;
+}
+.daytext:hover {
+    color: var(--col-text) !important;
+    text-decoration: none;
+}
+.daytext.disabled {
+    color: var(--col-disabled) !important;
+    cursor: not-allowed;
+}
+.daytext.disabled:hover {
+    color: var(--col-disabled) !important;
+    text-decoration: none;
+    cursor: not-allowed;
+}
+
+.ca_row {
+    padding-left: .5em;
+    /* max-height: 16em; */
+}
+
+.ca_hdr {
+    max-width: 24em;
+    padding-left:  .5em;
+}
+
+.ca_name {
+    font-size: 1.3em;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /*width: 9em;*/
+    /*max-width: 8em;*/
+    /*display:inline-block;*/
+}
+.ca_handle {
+    line-height: 0.8em;
+    font-weight: bold;
+    color: var(--col-highlight);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ca_handle:hover {
+    color: var(--col-highlight);
+}
+
+.ca_rank {
+}
+
+.ca_score {
+    font-size: 1.9em;
+    font-weight: bold;
+    text-align: left;
+}
+
+.ca_stat {
+    display: inline-block;
+    font-size: 0.9em;
+}
+
+.lnk {
+    color: var(--col-highlight);
+}
+.lnk:hover {
+    color: var(--col-highlight);
+}
+
+.ca_tabs {
+    display: block;
+    padding: 0.2em .5em;
+}
+.ca_tabs.active {
+    background-color: #BCBCBC !important;
+    border-color: #0000 !important;
+}
+
+.twituser {
+    cursor: pointer;
+    color: #626262;
+}
+.twituser:hover {
+    color: #626262;
+}
+.c_tweet {
+    /* padding: 0.1em .5em; */
+    border-top: .1em solid #bcbcbc;
+    border-bottom: .1em solid #bcbcbc;
+    background-color: var(--col-bg);
+    /* border-radius: .5em; */
+    font-family: sans-serif, 'Noto Color Emoji';
+}
+.c_tweet_hdr {
+    border-bottom: 1px solid darkgray;
+    /* margin: 0.2em; */
+}
+.c_subtweet {
+    padding-left: .5em;
+    border-top: .1em solid #bcbcbc;
+    /* border-radius: .5em; */
+    background-color: var(--col-bg);
+    font-size: .7em;
+}
+
+.toptweet_hdr {
+    /*border-bottom: 1px solid gray;*/
+    padding-bottom: 0.2em;
+}
+
+.c_img {
+    max-width: 8em;
+    max-height: 8em;
+}
+
+.page-link {
+    cursor: pointer !important;
+ }
+
+.page-link.active
+{
+    background-color: #BCBCBC !important;
+}
+
+.charts {
+    /*background-color: #D2D2D2;*/
+    background-color: #e3e3e3;
+    /* height: 50vw; */
+    width: 100vw;
+    /* height: 80vh; */
+}
+
+.rankline {
+    /*max-height: 2em;*/
+    vertical-align: middle;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.ranktitle {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.rankitem {
+    font-size: 1.1em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.transition > .flex-item {
+  transition: all 1s ease;
+}
+
+@keyframes kto15 {
+    to {order: 15;}
+}
+
+.nav-pills a {
+    color: black;
+    font-weight: bold;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #808080 !important;
+}
+
+.tw_row {
+    /*margin-bottom: .5em;*/
+}
+
+.tw_name {
+    font-size: 1.3em;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.node {
+    cursor: default;
+}
+
+.nav-link {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+@media (min-width: 576px)
+{
+    .mxw75 {
+        max-width: 75vw;
+    }    
+}
+

@@ -1,0 +1,17 @@
+bandit
+bottle
+emoji
+demoji
+jinja2
+pylint
+pylint-json2html
+python-prctl
+pyyaml
+textblob
+textblob-de
+textblob-fr
+textblob-nl
+tqdm
+tweepy
+vaderSentiment
+wheel

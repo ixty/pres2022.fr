@@ -1,0 +1,172 @@
+# =========================================================================== #
+# logging config
+# =========================================================================== #
+loglevel:                       info                    # critical, error, warning, info, debug
+logfile:                        /var/lib/chétane/chétane.log  # store logs to disk if set
+
+
+# =========================================================================== #
+# twitter credentials
+# =========================================================================== #
+creds:
+    -   name:                   __FIXME__
+        consumer_key:           __FIXME__
+        consumer_secret:        __FIXME__
+        access_token_key:       __FIXME__
+        access_token_secret:    __FIXME__
+
+
+# =========================================================================== #
+# data storage base path
+# =========================================================================== #
+datadir:                        "/var/lib/chétane/data/"
+datadir_raw:                    "./data-{daystr}/{source}.jsonl"
+
+
+# =========================================================================== #
+# web server config
+# =========================================================================== #
+bind_addr:                      127.0.0.1
+bind_port:                      8080
+path_web:                       /usr/share/chétane/web/
+
+
+# =========================================================================== #
+# data processing
+# =========================================================================== #
+process_timer:                  60          # process all new tweets every X seconds
+process_emojis:                 20
+process_hashtags:               10
+
+
+# =========================================================================== #
+# data acquisition
+# =========================================================================== #
+
+source_report:                  60          # log every X seconds stats on data source acquisition
+source_stats:                   5           # period between refreshes of source stats on disk
+
+
+sources:
+
+    -   name:       arthaud
+        handle:     n_arthaud
+        fullname:   Nathalie Arthaud
+        keywords:
+            - arthaud
+            - n_arthaud
+        color:      FF0013
+        photo:      https://pbs.twimg.com/profile_images/1445280531764088836/J2hmiCgL_400x400.jpg
+
+    -   name:       poutou
+        handle:     philippepoutou
+        fullname:   Philippe Poutou
+        keywords:
+            - poutou
+            - philippepoutou
+        color:      EB0010
+        photo:      https://pbs.twimg.com/profile_images/1414505068645208064/yVqvYNcU_400x400.jpg
+
+    -   name:       roussel
+        handle:     fabien_roussel
+        fullname:   Fabien Roussel
+        keywords:
+            - roussel
+            - fabien_roussel
+
+        color:      FF393F
+        photo:      https://pbs.twimg.com/profile_images/1316760978177118210/J4pidVIB_400x400.jpg
+
+    -   name:       mélenchon
+        handle:     jlmelenchon
+        fullname:   Jean-Luc Mélenchon
+
+        keywords:
+            - mélenchon
+            - jlmelenchon
+
+        color:      FF511B
+        photo:      https://pbs.twimg.com/profile_images/1410524303226028036/2xeMlqqy_400x400.jpg
+
+    -   name:       hidalgo
+        handle:     anne_hidalgo
+        fullname:   Anne Hidalgo
+        keywords:
+            - hidalgo
+            - Anne_Hidalgo
+        color:      C36274
+        photo:      https://pbs.twimg.com/profile_images/1448763207728967681/sD4Mp1o9_400x400.jpg
+
+    -   name:       montebourg
+        handle:     montebourg
+        fullname:   Arnaud Montebourg
+        keywords:
+            - montebourg
+        color:      F44C7B
+        photo:      https://pbs.twimg.com/profile_images/980335348373958656/YS0vUu1r_400x400.jpg
+
+    -   name:       jadot
+        handle:     yjadot
+        fullname:   Yannick Jadot
+        keywords:
+            - jadot
+            - yjadot
+        color:      1C9319
+        photo:      https://pbs.twimg.com/profile_images/1096356624254582784/4xEOMZ-E_400x400.jpg
+
+    -   name:       macron
+        handle:     emmanuelmacron
+        fullname:   Emmanuel Macron
+        keywords:
+            - macron
+            - emmanuelmacron
+        color:      E3EB15
+        photo:      https://pbs.twimg.com/profile_images/1308812357502668812/jSVlszOa_400x400.jpg
+
+    -   name:       bertrand
+        handle:     xavierbertrand
+        fullname:   Xavier Bertrand
+        keywords:
+            - bertrand
+            - xavierbertrand
+        color:      3D80C4
+        photo:      https://pbs.twimg.com/profile_images/1389200515427414022/qtGDcS-V_400x400.jpg
+
+    -   name:       dupont-aignan
+        handle:     dupontaignan
+        fullname:   Nicolas Dupont-Aignan
+        keywords:
+            - dupont-aignan
+            - dupontaignan
+        color:      1A41A5
+        photo:      https://pbs.twimg.com/profile_images/672054572601483265/xRGGJGn1_400x400.jpg
+
+    -   name:       le-pen
+        handle:     mlp_officiel
+        fullname:   Marine Le Pen
+        keywords:
+            - MLP_officiel
+            - le pen
+        color:      4D3613
+        photo:      https://pbs.twimg.com/profile_images/1436241098557566976/iQxr_b7h_400x400.jpg
+
+    -   name:       zemmour
+        handle:     zemmoureric
+        fullname:   Eric Zemmour
+        keywords:
+            - zemmour
+            - zemmoureric
+        color:      3C1805
+        photo:      https://pbs.twimg.com/profile_images/1438512918996262913/wyx604Cy_400x400.jpg
+
+    -   name:       lassalle
+        handle:     jeanlassalle
+        fullname:   Jean Lassalle
+        keywords:
+            - lassalle
+            - jeanlassalle
+        color:      E9812A
+        photo:      https://pbs.twimg.com/profile_images/868057012613128192/taT_x7GV_400x400.jpg
+
+
+

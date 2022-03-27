@@ -1,0 +1,184 @@
+{% extends "page.html" %}
+
+{% block content %}
+<div class="w-100 d-flex">
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true" onclick="do_graph('id_chart_log', 'log');">
+                Logarithmique
+            </a>
+            <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false" onclick="do_graph('id_chart_log', 'lin');">
+                Linéaire
+            </a>
+        <!--
+            <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false" onclick="do_graph('id_chart_log', 'rel');">
+                Relatif
+            </a>
+        -->
+            <a class="nav-item nav-link" style="vertical-align: middle;" onclick="">
+                <input id="id_daymin" type="date" min="{{ days[0] }}" max="{{ days[-1] }}" value="{{ days[0] }}" onchange="localStorage.setItem('daymin', $('#id_daymin').val()); window.location.reload();">
+                ⇉
+                <input id="id_daymax" type="date" min="{{ days[0] }}" max="{{ days[-1] }}" value="{{ days[-1] }}" onchange="localStorage.setItem('daymax', $('#id_daymax').val()); window.location.reload();">
+
+                <input type="button" class="d-none d-sm-inline" value="Reset" onclick="localStorage.setItem('daymin', ''); localStorage.setItem('daymax', ''); window.location.reload();">
+            </a>
+        </div>
+    </nav>
+</div>
+<canvas id="id_chart_log" class="charts" width="" height="" style=""></canvas>
+
+
+<script>
+var main_chart = null;
+
+var hidden_candidates = get_hidden_candidates();
+
+var days = [
+    {% for day in days %}
+        '{{ day }}',
+    {% endfor %}
+];
+
+var daymin = localStorage.getItem('daymin') || '{{ days[0] }}';
+var daymax = localStorage.getItem('daymax') || '{{ days[-1] }}';
+if(daymin > daymax)
+{
+    alert('dates invalides');
+    localStorage.setItem('daymin', '');
+    localStorage.setItem('daymax', '');
+    window.location.reload();
+}
+
+$('#id_daymin').val(daymin);
+$('#id_daymax').val(daymax);
+
+var dayminind = days.indexOf(daymin);
+var daymaxind = days.indexOf(daymax);
+
+var candidates_ids = [
+    {% for c in candidates %}
+        '{{ c }}',
+    {% endfor %}
+];
+
+var dayrange = days;
+dayrange = dayrange.splice(dayminind, daymaxind-dayminind);
+
+
+function do_graph(id, type)
+{
+    const ctx = document.getElementById(id).getContext('2d');
+    if(main_chart)
+        main_chart.destroy();
+
+    main_chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dayrange,
+            datasets: [
+                {% for c in candidates %}
+                    {
+                        label: '{{ attrs[c].fullname }}',
+                        backgroundColor: '#{{ attrs[c].color }}',
+                        borderColor: '#{{ attrs[c].color }}',
+                        {# borderWidth: 1, #}
+                        cubicInterpolationMode: 'monotone',
+                        tension: 0.4,
+                        data: [
+
+                            {% for day in days %}
+                                {% if day in cstats[c] %}
+                                    (type == 'log') ?
+                                        Math.log({{ cstats[c][day]['tweets']}})
+                                    : (type == 'rel') ?
+                                        {{ '%.1f' % (100.0 * cstats[c][day]['tweets'] / (firstscore[c]['tweets'] or cstats[c][day]['tweets'] or 1)) }}
+                                    :
+                                        {{ cstats[c][day]['tweets'] }}
+                                    ,
+                                    {# {{ rankings[day][c]}}, #}
+                                {% else %}
+                                    null,
+                                {% endif %}
+                            {% endfor %}
+
+                        ].splice(dayminind, daymaxind-dayminind),
+                        rankings: [
+                            {% for day in days %}
+                                {{ rankings[day][c]}},
+                            {% endfor %}
+                        ],
+                        hidden: hidden_candidates.indexOf('{{c}}') >= 0 && hidden_candidates.length != 0,
+                    },
+                {% endfor %}
+            ],
+        },
+        options: {
+            maintainAspectRatio: true,
+            aspectRatio: window.innerWidth / (window.innerHeight - (3.5 * parseFloat(getComputedStyle(document.getElementById('navbar')).lineHeight))),
+            aspectRatio: window.innerWidth / (window.innerHeight - (3.5 * parseFloat(getComputedStyle(document.getElementById('navbar')).height))),
+            scales: {
+                y: {
+                    // reverse: true,
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: '#000000',
+                    },
+                    onClick: function(e, legendItem, legend) {
+                        const index = legendItem.datasetIndex;
+                        const ci = legend.chart;
+                        const cname = candidates_ids[legendItem.datasetIndex];
+
+                        if (ci.isDatasetVisible(index)) {
+                            ci.hide(index);
+                            legendItem.hidden = true;
+                            if(hidden_candidates.indexOf(cname) < 0)
+                            {
+                                hidden_candidates.push(cname);
+                                localStorage.setItem('hidden_candidates', hidden_candidates);
+                            }
+                        } else {
+                            ci.show(index);
+                            legendItem.hidden = false;
+                            if(hidden_candidates.indexOf(cname) >= 0)
+                            {
+                                hidden_candidates.splice(hidden_candidates.indexOf(cname), 1);
+                                localStorage.setItem('hidden_candidates', hidden_candidates);
+                            }
+                        }
+                    },
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let name = context.dataset.label || '';
+                            let rank = context.dataset.rankings[context.parsed.x] || '';
+                            let date = context.label;
+                            let tweets = type == 'log' ? parseInt(Math.exp(context.parsed.y)) : context.parsed.y;
+
+                            let score = new Intl.NumberFormat('fr-FR').format(tweets);
+
+                            if (type == 'rel')
+                            {
+                                let n =  Number.parseFloat(score).toFixed(1);
+                                return name + ' ' + n + '% depuis le ' + '{{ days[0] }}';
+                            }
+
+                            return name + ' ' + rank + 'ᵉ du classement le ' + date + ' avec ' + score + ' tweets.';
+                        }
+                    }
+                },
+            }
+        }
+    });
+}
+
+do_graph('id_chart_log', 'log');
+
+</script>
+
+{% endblock %}

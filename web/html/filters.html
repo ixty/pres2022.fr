@@ -1,0 +1,98 @@
+<div class="modal fade" id="filters">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filtrer les candidats</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: .5em">
+
+                <div class="text-center">
+                    <button class="btn btn-outline-secondary mx-auto" onclick="reset_filters();">
+                        Réinitialisation
+                    </button>
+                </div>
+
+                <ul class="list-group">
+                {% for src in sources %}
+                    <li class="list-item" onclick="toggle_candidate('{{ src.name }}')" style="
+                        padding-bottom: .5em;
+                        padding-left: 10%;
+                    ">
+                        <span class="rankline" style="
+                            border-left: 0.5em solid #{{ src.color }};
+                            padding-left: 0.5em;
+                            text-align: left;
+                            margin: auto;
+                            cursor: pointer;
+                        ">
+                            <img src="{{ src.photo }}" style="
+                                max-width: 1.5em;
+                                max-height: 1.5em;
+                                vertical-align:
+                                bottom; border-radius: 50%;
+                            ">
+                            <span id="id_fil_{{ src.name }}">
+                                <span class="d-none d-sm-inline">
+                                    {{ src.fullname.split(' ')[0] }}
+                                </span>
+                                {{ ' '.join(src.fullname.split(' ')[1:]) }}
+                            </span>
+                        </span>
+                    </li>
+                {% endfor %}
+                </ul>
+
+                <script>
+var hidden_candidates = get_hidden_candidates();
+for(var c of hidden_candidates)
+    $('#id_fil_' + c).css('text-decoration', 'line-through');
+
+function reset_filters()
+{
+    localStorage.setItem('hidden_candidates', '');
+    localStorage.setItem('daymin', '');
+    localStorage.setItem('daymax', '');
+    window.location.reload();
+}
+function toggle_candidate(name)
+{
+    if(hidden_candidates.indexOf(name) >= 0)
+    {
+        hidden_candidates.splice(hidden_candidates.indexOf(name), 1);
+        $('#id_fil_' + name).css('text-decoration', 'none');
+    }
+    else
+    {
+        hidden_candidates.push(name);
+        $('#id_fil_' + name).css('text-decoration', 'line-through');
+    }
+
+    if(!hidden_candidates.length)
+        localStorage.setItem('hidden_candidates', '_');
+    else
+        localStorage.setItem('hidden_candidates', hidden_candidates);
+}
+
+                </script>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var backup_hidden_candidates = '';
+
+    $("#filters").on('shown.bs.modal', function(){
+        backup_hidden_candidates = String(hidden_candidates);
+    });
+    $("#filters").on('hidden.bs.modal', function(){
+        if(backup_hidden_candidates != String(hidden_candidates))
+            window.location.reload();
+    });
+</script>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        {% if minsize %}
+            <meta name="viewport" content="width={{ minsize }}, shrink-to-fit=yes">
+        {% else %}
+            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        {% endif %}
+
+        <title>Présidentielle 2022 sur Twitter</title>
+
+        <link rel="icon" href="favicon.ico" />
+
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/chétane.css">
+
+        <script src="/js/jquery-3.6.0.min.js"></script>
+        <script src="/js/popper.min.js"></script>
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/wordcloud2.js"></script>
+        <script src="/js/chart.min.js"></script>
+        <script src="/js/swiped-events.min.js"></script>
+        <script src="/js/d3.v7.min.js"></script>
+        <script src="/js/chétane.js"></script>
+
+        {% include "local.html" %}
+
+    </head>
+
+    <body>
+        <nav id='navbar' class="navbar navbar-expand navbar-dark bg-dark mb-0" style="padding: 0;">
+            <ul class="w-100 navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/index.html">
+                        <img src="/img/twitter-white.svg" style="max-width: 1.5em; max-height: 1.5em;">
+                        <span class="d-none d-sm-inline">pres2022.fr</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'ranks' %} active {% endif %}" href="/ranks.html" style="padding-left: 0;">
+                        <span class="bwemoji">🏆</span>
+                        <span class="{% if page != 'ranks' %} d-none d-sm-inline {% endif %}">Rangs</span>
+                    </a>
+                </li>
+                <li class="nav-item ">
+                    <a class="nav-link {% if page == 'graphs' %} active {% endif %}" href="/graphs.html" style="padding-left: 0;">
+                        <span class="bwemoji">📈</span>
+                        <span class="{% if page != 'graphs' %} d-none d-sm-inline {% endif %}">Graphs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'tags' %} active {% endif %}" href="/tags.html" style="padding-left: 0;">
+                        <span class="bwemoji">💥</span>
+                        <span class="{% if page != 'tags' %} d-none d-sm-inline {% endif %}">Tags</span>
+                    </a>
+                </li>
+                <li class="nav-item mr-auto {% if page == 'tweets' %} active {% endif %}">
+                    <a class="nav-link" href="/tweets.html" style="padding-left: 0;">
+                        <span class="bwemoji">💬</span>
+                        <span class="{% if page != 'tweets' %} d-none d-sm-inline {% endif %}">Tweets</span>
+                    </a>
+                </li>
+
+                <li class="nav-item ml-auto">
+                    <a class="nav-link" data-toggle="modal" data-target="#filters" style="cursor: pointer;">
+                        <span class="bwemoji"><img src="/img/filter.svg" style="color: red;"></span>
+                        <span class="d-none d-sm-inline">Filters</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="modal" data-target="#help" style="padding-left: 0; cursor: pointer;">
+                        Info
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div id="id_content">
+        {% block content %}
+        {% endblock %}
+        </div>
+
+        <!-- information -->
+        {% include "help.html" %}
+
+        <!-- information -->
+        {% include "filters.html" %}
+
+        <script>
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip()
+            });
+        </script>
+    </body>
+</html>
+
+

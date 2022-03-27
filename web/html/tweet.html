@@ -1,0 +1,80 @@
+{% macro tweet(cand, tw, daystr, cat) %}
+<div class="c_tweet">
+    <div class="c_tweet_hdr">
+        <span data-toggle="tooltip" data-placement="top" title="Afficher dans twitter">
+            <a class="twituser" target="_blank" href="https://twitter.com/{{ tw.user.screen_name }}/statuses/{{ tw.id_str }}">
+                <img src="/img/twitter.svg" style="max-width: 1.5em; max-height: 1.5em;">
+                <b>{{ tw['user']['screen_name'] }}</b>
+                (<small>{{ tw['user']['name'] }}</small>)
+            </a>
+        </span>
+        <span style="display: inline-block">
+            <small>
+                {% if cat in ('self', 'likes') %}
+                    ❤️
+                {% elif cat == 'retweets' %}
+                    🔄
+                {% elif cat == 'followers' %}
+                    👪
+                {% endif %}
+                {{ '{:,}'.format(tw['__counter']) }}
+                ⌛ {{ tw|tweet_since(daystr)  }}</b>
+
+                {#
+                <a onclick="$('#id_flash_{{ cat }}_{{ cand }}').html(`<pre>{{ tw|json|e }}</pre>`); $('#id_flash_{{ cat }}_{{ cand }}').toggle(); return false;" href="#">🔎</a>
+                #}
+
+            </small>
+        </span>
+    </div>
+    <div class="c_tweet_body">
+        {% if tw['retweeted_status'] %}
+            <!-- retweets -->
+            <div class="w-100">
+                RT:
+            </div>
+            <div class="ml-auto" style="width: 90%;">
+                <div class="c_subtweet">
+                    <b>@{{ tw.retweeted_status.user.screen_name }}:</b>
+                    {% if tw.retweeted_status.extended_tweet %}
+                        {{ tw.retweeted_status.extended_tweet.full_text }}
+                    {% else %}
+                        {{ tw.retweeted_status.text }}
+                    {% endif %}
+                </div>
+            </div>
+
+        {% else %}
+            <!-- normal tweets & quotes -->
+            <div class="w-100">
+                {{ tw|tweet_fixtext }}
+            </div>
+            {% if tw['quoted_status'] %}
+            <div class="ml-auto" style="width: 90%;">
+                <div class="c_subtweet">
+                    <b>@{{ tw.quoted_status.user.screen_name }}:</b>
+                    {% if tw.quoted_status.extended_tweet %}
+                        {{ tw.quoted_status.extended_tweet.full_text }}
+                    {% else %}
+                        {{ tw.quoted_status.text }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+
+        {% if tw.extended_tweet and tw.extended_tweet.entities and tw.extended_tweet.entities.media %}
+            {% for media in tw.extended_tweet.entities.media %}
+                <a href="{{ media.media_url_https}}" target="_blank"><img class="c_img mx-auto" src="{{ media.media_url_https}}"></a>
+            {% endfor %}
+        {% elif tw.extended_entities and tw.extended_entities.media %}
+            {% for media in tw.extended_entities.media %}
+                <a href="{{ media.media_url_https}}" target="_blank"><img class="c_img mx-auto" src="{{ media.media_url_https}}"></a>
+            {% endfor %}
+        {% endif %}
+
+    </div>
+
+</div>
+{% endmacro %}
+
